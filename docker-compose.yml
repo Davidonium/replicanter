@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+    db:
+        image: mysql:5.7
+        restart: always
+        environment:
+            MYSQL_DATABASE: 'repl'
+            MYSQL_USER: 'repl'
+            MYSQL_PASSWORD: 'repl'
+            MYSQL_ROOT_PASSWORD: 'repl'
+        ports:
+            - '3308:3306'
+        volumes:
+            - repl-db:/var/lib/mysql
+            - ./etc/init.sql:/docker-entrypoint-initdb.d/init.sql
+            - ./etc/my.cnf:/etc/mysql/conf.d/custom.cnf
+# Names our volume
+volumes:
+    repl-db:
