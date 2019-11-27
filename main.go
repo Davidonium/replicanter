@@ -18,12 +18,17 @@ type Column struct {
 // ColumnNameMap tablename --> column ordinal = column name
 type ColumnNameMap = map[string]map[int]string
 
+type RowData = map[string]interface{}
+
+type RowAction int
+
 const (
-	InsertAction = "insert"
-	UpdateAction = "update"
-	DeleteAction = "delete"
-	Database     = "repl"
+	InsertAction RowAction = iota
+	UpdateAction
+	DeleteAction
 )
+
+const Database = "repl"
 
 func main() {
 	cfg := replication.BinlogSyncerConfig{
@@ -55,7 +60,6 @@ func main() {
 
 		if ok {
 			evt := ev.Header.EventType
-
 			action, ok := GetActionFromEventType(evt)
 
 			if !ok {
@@ -69,17 +73,25 @@ func main() {
 				continue
 			}
 
-			fmt.Printf("action: %s - table: %s\n", action, table)
-			for _, row := range rev.Rows {
-				for colIndex, value := range row {
-					colName := cols[table][colIndex+1]
-					if _, ok := value.([]byte); ok {
-						fmt.Printf("byte array - %s: %q\n", colName, value)
-					} else {
-						fmt.Printf("%s: %#v\n", colName, value)
-					}
+			fmt.Printf("action: %s\n", RowActionNames[action])
+			fmt.Printf("table: %s\n", table)
+
+			if action == UpdateAction {
+				fmt.Println("before row")
+				br := MapRowFromBinlog(table, cols, rev.Rows[0])
+				fmt.Printf("%#v\n", br)
+				fmt.Print("\n")
+
+				fmt.Println("after row")
+				ar := MapRowFromBinlog(table, cols, rev.Rows[1])
+				fmt.Printf("%#v\n", ar)
+			} else {
+				for _, row := range rev.Rows {
+					r := MapRowFromBinlog(table, cols, row)
+					fmt.Printf("%#v\n", r)
 				}
 			}
+
 			fmt.Print("\n")
 		}
 	}
@@ -91,28 +103,29 @@ func panicOnErr(err error) {
 	}
 }
 
-func GetActionFromEventType(evt replication.EventType) (string, bool) {
-	var action string
-	switch evt {
-	case replication.WRITE_ROWS_EVENTv2:
-		action = InsertAction
-	case replication.UPDATE_ROWS_EVENTv2:
-		action = UpdateAction
-	case replication.DELETE_ROWS_EVENTv2:
-		action = DeleteAction
-	default:
-		return "", false
-	}
+var RowActionNames = map[RowAction]string{
+	InsertAction: "insert",
+	UpdateAction: "update",
+	DeleteAction: "delete",
+}
 
-	return action, true
+var eventTypeToAction = map[replication.EventType]RowAction{
+	replication.WRITE_ROWS_EVENTv2:  InsertAction,
+	replication.UPDATE_ROWS_EVENTv2: UpdateAction,
+	replication.DELETE_ROWS_EVENTv2: DeleteAction,
+}
+
+func GetActionFromEventType(evt replication.EventType) (RowAction, bool) {
+	action, ok := eventTypeToAction[evt]
+	return action, ok
 }
 
 func GetColumnNameMap(db *sql.DB) (ColumnNameMap, error) {
-	colSql := `select TABLE_NAME, 
-					  COLUMN_NAME, 
-				      ORDINAL_POSITION 
-			  	 from COLUMNS
-			  	where TABLE_SCHEMA = ?`
+	colSql := `select table_name, 
+					  column_name, 
+				      ordinal_position 
+			  	 from columns
+			  	where table_schema = ?`
 	colResult, err := db.Query(colSql, Database)
 
 	if err != nil {
@@ -143,4 +156,14 @@ func GetColumnNameMap(db *sql.DB) (ColumnNameMap, error) {
 	}
 
 	return cols, nil
+}
+
+func MapRowFromBinlog(table string, cols ColumnNameMap, row []interface{}) RowData {
+	rd := RowData{}
+	for colIndex, value := range row {
+		colName := cols[table][colIndex+1]
+		rd[colName] = value
+	}
+
+	return rd
 }
