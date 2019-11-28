@@ -1,11 +1,9 @@
-create table doctors
-(
-	id int unsigned not null auto_increment primary key,
-	name varchar(100) not null,
-	surname varchar(100) not null
+create table people (
+	id int unsigned primary key not null,
+	first_name varchar(50) not null,
+	last_name varchar(50) not null,
+	email varchar(50) not null,
+	gender varchar(50) not null,
+	ip_address varchar(20) not null,
+	created_at datetime not null
 );
-
-insert into doctors (name, surname) values ('David', 'Hernando');
-insert into doctors (name, surname) values ('Antoine', 'Meeus');
-insert into doctors (name, surname) values ('Juan Francisco', 'Sanchez');
-insert into doctors (name, surname) values ('David', 'Hernando');
