@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/siddontang/go-mysql/mysql"
@@ -20,10 +21,10 @@ type ColumnNameMap = map[string]map[int]string
 
 type RowData = map[string]interface{}
 
-type RowAction int
+type SqlAction int
 
 const (
-	InsertAction RowAction = iota
+	InsertAction SqlAction = iota
 	UpdateAction
 	DeleteAction
 )
@@ -55,12 +56,12 @@ func main() {
 	panicOnErr(err)
 
 	for {
-		ev, _ := streamer.GetEvent(context.Background())
+		bev, _ := streamer.GetEvent(context.Background())
 
-		rev, ok := ev.Event.(*replication.RowsEvent)
+		rev, ok := bev.Event.(*replication.RowsEvent)
 
 		if ok {
-			evt := ev.Header.EventType
+			evt := bev.Header.EventType
 			action, ok := GetActionFromEventType(evt)
 
 			if !ok {
@@ -68,28 +69,26 @@ func main() {
 			}
 
 			schema := string(rev.Table.Schema)
-			table := string(rev.Table.Table)
-
 			if schema != Database {
 				continue
 			}
 
-			fmt.Printf("action: %s\n", RowActionNames[action])
-			fmt.Printf("table: %s\n", table)
+			table := string(rev.Table.Table)
 
 			if action == UpdateAction {
-				fmt.Println("before row")
-				br := MapRowFromBinlog(table, cols, rev.Rows[0])
-				fmt.Printf("%#v\n", br)
-				fmt.Print("\n")
+				l := len(rev.Rows)
 
-				fmt.Println("after row")
-				ar := MapRowFromBinlog(table, cols, rev.Rows[1])
-				fmt.Printf("%#v\n", ar)
+				if l%2 != 0 {
+					errors.New("invalid number of rows for an update, it has to be even (before and after row for each statement)")
+				}
+
+				for i := 0; i < l; i += 2 {
+					br := RowDataFromBinlog(table, cols, rev.Rows[i])
+					ar := RowDataFromBinlog(table, cols, rev.Rows[i+1])
+				}
 			} else {
 				for _, row := range rev.Rows {
-					r := MapRowFromBinlog(table, cols, row)
-					fmt.Printf("%#v\n", r)
+					r := RowDataFromBinlog(table, cols, row)
 				}
 			}
 
@@ -104,19 +103,19 @@ func panicOnErr(err error) {
 	}
 }
 
-var RowActionNames = map[RowAction]string{
+var RowActionNames = map[SqlAction]string{
 	InsertAction: "insert",
 	UpdateAction: "update",
 	DeleteAction: "delete",
 }
 
-var eventTypeToAction = map[replication.EventType]RowAction{
+var eventTypeToAction = map[replication.EventType]SqlAction{
 	replication.WRITE_ROWS_EVENTv2:  InsertAction,
 	replication.UPDATE_ROWS_EVENTv2: UpdateAction,
 	replication.DELETE_ROWS_EVENTv2: DeleteAction,
 }
 
-func GetActionFromEventType(evt replication.EventType) (RowAction, bool) {
+func GetActionFromEventType(evt replication.EventType) (SqlAction, bool) {
 	action, ok := eventTypeToAction[evt]
 	return action, ok
 }
@@ -159,7 +158,7 @@ func GetColumnNameMap(db *sql.DB) (ColumnNameMap, error) {
 	return cols, nil
 }
 
-func MapRowFromBinlog(table string, cols ColumnNameMap, row []interface{}) RowData {
+func RowDataFromBinlog(table string, cols ColumnNameMap, row []interface{}) RowData {
 	rd := RowData{}
 	for colIndex, value := range row {
 		colName := cols[table][colIndex+1]
