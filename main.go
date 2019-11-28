@@ -41,6 +41,7 @@ func main() {
 	}
 	syncer := replication.NewBinlogSyncer(cfg)
 
+	// TODO retrieve last position using `show master status` query and provide it as an option
 	streamer, err := syncer.StartSync(mysql.Position{Name: "", Pos: 0})
 
 	panicOnErr(err)
