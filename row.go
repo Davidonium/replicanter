@@ -13,7 +13,7 @@ func (rd RowData) Dump(w io.Writer) {
 	}
 }
 
-func RowDataFromBinlog(table string, cols ColumnNameMap, row []interface{}) RowData {
+func RowDataFromBinlog(table string, cols ColumnNames, row []interface{}) RowData {
 	rd := RowData{}
 	for colIndex, value := range row {
 		colName := cols[table][colIndex+1]

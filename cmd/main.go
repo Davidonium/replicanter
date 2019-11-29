@@ -30,11 +30,11 @@ func main() {
 
 	panicOnErr(err)
 
-	ds := fmt.Sprintf("%s:%s@tcp(%s:%d)/information_schema", cfg.User, cfg.Password, cfg.Host, cfg.Port)
+	ds := fmt.Sprintf("%s:%s@tcp(%s:%d)", cfg.User, cfg.Password, cfg.Host, cfg.Port)
 
 	db, err := sql.Open("mysql", ds)
 
-	cols, err := replicanter.GetColumnNameMap(db, Database)
+	cols, err := replicanter.GetColumnNames(db, Database)
 
 	panicOnErr(err)
 
@@ -45,7 +45,7 @@ func main() {
 
 		if ok {
 			evt := bev.Header.EventType
-			action, ok := replicanter.GetActionFromEventType(evt)
+			action, ok := replicanter.GetSqlActionFromEventType(evt)
 
 			if !ok {
 				continue

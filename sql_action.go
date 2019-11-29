@@ -10,7 +10,7 @@ const (
 	DeleteAction
 )
 
-var RowActionNames = map[SqlAction]string{
+var SqlActionNames = map[SqlAction]string{
 	InsertAction: "insert",
 	UpdateAction: "update",
 	DeleteAction: "delete",
@@ -22,7 +22,7 @@ var eventTypeToAction = map[replication.EventType]SqlAction{
 	replication.DELETE_ROWS_EVENTv2: DeleteAction,
 }
 
-func GetActionFromEventType(evt replication.EventType) (SqlAction, bool) {
+func GetSqlActionFromEventType(evt replication.EventType) (SqlAction, bool) {
 	action, ok := eventTypeToAction[evt]
 	return action, ok
 }

@@ -8,14 +8,14 @@ type Column struct {
 	Ordinal int
 }
 
-// ColumnNameMap table --> column ordinal = column name
-type ColumnNameMap map[string]map[int]string
+// ColumnNames table --> column ordinal = column name
+type ColumnNames map[string]map[int]string
 
-func GetColumnNameMap(db *sql.DB, schema string) (ColumnNameMap, error) {
+func GetColumnNames(db *sql.DB, schema string) (ColumnNames, error) {
 	colSql := `select table_name, 
 					  column_name, 
 				      ordinal_position 
-			  	 from columns
+			  	 from information_schema.columns
 			  	where table_schema = ?`
 	colResult, err := db.Query(colSql, schema)
 
@@ -23,7 +23,7 @@ func GetColumnNameMap(db *sql.DB, schema string) (ColumnNameMap, error) {
 		return nil, err
 	}
 
-	var cols = ColumnNameMap{}
+	var cols = ColumnNames{}
 
 	for i := 0; colResult.Next(); i++ {
 		var col Column
