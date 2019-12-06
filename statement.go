@@ -34,19 +34,19 @@ func (urp UpdatedRowPair) Dump(w io.Writer) {
 	urp.AfterRow.Dump(w)
 }
 
-type DefaultStatement struct {
+type RowStatement struct {
 	Schema string
 	Table  string
 	Action SqlAction
 	Rows   []RowData
 }
 
-func (ds DefaultStatement) Dump(w io.Writer) {
-	fmt.Fprintf(w, "schema: %s\n", ds.Schema)
-	fmt.Fprintf(w, "table: %s\n", ds.Table)
-	fmt.Fprintf(w, "statement: %s\n", SqlActionNames[ds.Action])
+func (rs RowStatement) Dump(w io.Writer) {
+	fmt.Fprintf(w, "schema: %s\n", rs.Schema)
+	fmt.Fprintf(w, "table: %s\n", rs.Table)
+	fmt.Fprintf(w, "statement: %s\n", SqlActionNames[rs.Action])
 
-	for _, r := range ds.Rows {
+	for _, r := range rs.Rows {
 		r.Dump(w)
 	}
 }

@@ -8,7 +8,7 @@ import (
 
 type PrintStatementOnRow struct{}
 
-func (*PrintStatementOnRow) Handle(st replicanter.DefaultStatement) {
+func (*PrintStatementOnRow) Handle(st replicanter.RowStatement) {
 	st.Dump(os.Stdout)
 }
 
@@ -29,13 +29,8 @@ func main() {
 	}
 	r := replicanter.NewReplicanter(cfg)
 
-	ps := &PrintStatementOnRow{}
-
-	r.OnDefault(ps)
-
-	pu := &PrintStatementOnUpdate{}
-
-	r.OnUpdate(pu)
+	r.OnRow(&PrintStatementOnRow{})
+	r.OnUpdate(&PrintStatementOnUpdate{})
 
 	err := r.Run()
 
