@@ -41,7 +41,7 @@ func (urp UpdateRowPair) Dump(w io.Writer) {
 }
 
 type RowStatement struct {
-	Table      schema.Table
+	Table      *schema.Table
 	Action     SqlAction
 	Rows       []RowData
 	UpdateRows []UpdateRowPair

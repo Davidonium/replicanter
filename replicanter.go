@@ -119,8 +119,7 @@ func (r *Replicanter) Run() error {
 			}
 
 			rs := RowStatement{
-				Schema:     schema,
-				Table:      table,
+				Table:      tables[table],
 				Action:     action,
 				UpdateRows: rows,
 			}
@@ -134,8 +133,7 @@ func (r *Replicanter) Run() error {
 			}
 
 			s := RowStatement{
-				Schema: schema,
-				Table:  table,
+				Table:  tables[table],
 				Action: action,
 				Rows:   rows,
 			}
