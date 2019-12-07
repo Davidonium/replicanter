@@ -3,6 +3,8 @@ package replicanter
 import (
 	"fmt"
 	"io"
+
+	"github.com/siddontang/go-mysql/schema"
 )
 
 type RowData map[string]interface{}
@@ -39,15 +41,14 @@ func (urp UpdateRowPair) Dump(w io.Writer) {
 }
 
 type RowStatement struct {
-	Schema     string
-	Table      string
+	Table      schema.Table
 	Action     SqlAction
 	Rows       []RowData
 	UpdateRows []UpdateRowPair
 }
 
 func (rs RowStatement) Dump(w io.Writer) {
-	fmt.Fprintf(w, "schema: %#v | table: %#v | action: %#v\n", rs.Schema, rs.Table, SqlActionNames[rs.Action])
+	fmt.Fprintf(w, "schema: %#v | table: %#v | action: %#v\n", rs.Table.Schema, rs.Table.Name, rs.Action.String())
 	if rs.Action == UpdateAction {
 		for _, r := range rs.UpdateRows {
 			r.Dump(w)

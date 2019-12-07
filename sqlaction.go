@@ -10,7 +10,11 @@ const (
 	DeleteAction
 )
 
-var SqlActionNames = map[SqlAction]string{
+func (sa SqlAction) String() string {
+	return sqlActionNames[sa]
+}
+
+var sqlActionNames = map[SqlAction]string{
 	InsertAction: "insert",
 	UpdateAction: "update",
 	DeleteAction: "delete",
