@@ -12,7 +12,7 @@ import (
 )
 
 type ColumnNamesRetriever interface {
-	All(schema string) (ColumnNames, error)
+	All(schema string) (Tables, error)
 }
 
 type OnRow interface {
@@ -61,7 +61,7 @@ func (r *Replicanter) Run() error {
 
 	cnr := NewSqlColumnNamesRetriever(db)
 
-	cols, err := cnr.All(r.config.Database)
+	tables, err := cnr.All(r.config.Database)
 
 	if err != nil {
 		return err
@@ -108,8 +108,8 @@ func (r *Replicanter) Run() error {
 
 			rows := make([]UpdateRowPair, l/2)
 			for i := 0; i < l; i += 2 {
-				br := RowDataFromBinlog(table, cols, rev.Rows[i])
-				ar := RowDataFromBinlog(table, cols, rev.Rows[i+1])
+				br := RowDataFromBinlog(table, tables, rev.Rows[i])
+				ar := RowDataFromBinlog(table, tables, rev.Rows[i+1])
 				pair := UpdateRowPair{
 					BeforeRow: br,
 					AfterRow:  ar,
@@ -129,7 +129,7 @@ func (r *Replicanter) Run() error {
 		} else {
 			rows := make([]RowData, len(rev.Rows))
 			for _, row := range rev.Rows {
-				r := RowDataFromBinlog(table, cols, row)
+				r := RowDataFromBinlog(table, tables, row)
 				rows = append(rows, r)
 			}
 

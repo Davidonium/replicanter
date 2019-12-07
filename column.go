@@ -1,17 +1,13 @@
 package replicanter
 
-import "database/sql"
+import (
+	"database/sql"
 
-type Column struct {
-	Table   string
-	Name    string
-	Ordinal int
-	Type    string
-	Extra   string
-}
+	"github.com/siddontang/go-mysql/schema"
+)
 
-// ColumnNames table --> column ordinal = column name
-type ColumnNames map[string]map[int]string
+// Tables table --> column ordinal = column name
+type Tables map[string]*schema.Table
 
 type SqlColumnNamesRetriever struct {
 	db *sql.DB
@@ -21,15 +17,16 @@ func NewSqlColumnNamesRetriever(db *sql.DB) *SqlColumnNamesRetriever {
 	return &SqlColumnNamesRetriever{db: db}
 }
 
-func (cnr *SqlColumnNamesRetriever) All(schema string) (ColumnNames, error) {
+func (cnr *SqlColumnNamesRetriever) All(ts string) (Tables, error) {
 	colSql := `select table_name, 
 					  column_name, 
 				      ordinal_position,
        				  column_type,
-       				  extra
+       				  extra,
+       				  collation_name
 			  	 from information_schema.columns
 			  	where table_schema = ?`
-	colResult, err := cnr.db.Query(colSql, schema)
+	colResult, err := cnr.db.Query(colSql, ts)
 
 	if err != nil {
 		return nil, err
@@ -37,27 +34,35 @@ func (cnr *SqlColumnNamesRetriever) All(schema string) (ColumnNames, error) {
 
 	defer colResult.Close()
 
-	var cols = ColumnNames{}
+	var cols = Tables{}
 
 	for i := 0; colResult.Next(); i++ {
-		var col Column
+		var tableName, colName, colType, extra string
+		var colOrdinal int
+		var collation sql.NullString
 		err := colResult.Scan(
-			&col.Table,
-			&col.Name,
-			&col.Ordinal,
-			&col.Type,
-			&col.Extra,
+			&tableName,
+			&colName,
+			&colOrdinal,
+			&colType,
+			&extra,
+			&collation,
 		)
 
 		if err != nil {
 			return nil, err
 		}
 
-		if _, ok := cols[col.Table]; !ok {
-			cols[col.Table] = map[int]string{}
+		if _, ok := cols[tableName]; !ok {
+			cols[tableName] = &schema.Table{
+				Schema:  ts,
+				Name:    tableName,
+				Columns: make([]schema.TableColumn, 0, 16),
+				Indexes: make([]*schema.Index, 0, 8),
+			}
 		}
 
-		cols[col.Table][col.Ordinal] = col.Name
+		cols[tableName].AddColumn(colName, colType, collation.String, extra)
 	}
 
 	return cols, nil
