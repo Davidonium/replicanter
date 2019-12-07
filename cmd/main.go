@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/davidonium/replicanter"
@@ -10,6 +11,7 @@ type PrintStatementOnRow struct{}
 
 func (*PrintStatementOnRow) Handle(st replicanter.RowStatement) {
 	st.Dump(os.Stdout)
+	fmt.Println("")
 }
 
 func main() {

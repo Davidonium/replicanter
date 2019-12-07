@@ -8,8 +8,9 @@ import (
 type RowData map[string]interface{}
 
 func (rd RowData) Dump(w io.Writer) {
+	fmt.Fprint(w, "data: \n")
 	for key, value := range rd {
-		fmt.Fprintf(w, "column - %s: %#v\n", key, value)
+		fmt.Fprintf(w, "%s: %#v\n", key, value)
 	}
 }
 
@@ -24,12 +25,12 @@ func RowDataFromBinlog(table string, cols ColumnNames, row []interface{}) RowDat
 	return rd
 }
 
-type UpdatedRowPair struct {
+type UpdateRowPair struct {
 	BeforeRow RowData
 	AfterRow  RowData
 }
 
-func (urp UpdatedRowPair) Dump(w io.Writer) {
+func (urp UpdateRowPair) Dump(w io.Writer) {
 	fmt.Fprintln(w, "before:")
 	urp.BeforeRow.Dump(w)
 
@@ -42,14 +43,11 @@ type RowStatement struct {
 	Table      string
 	Action     SqlAction
 	Rows       []RowData
-	UpdateRows []UpdatedRowPair
+	UpdateRows []UpdateRowPair
 }
 
 func (rs RowStatement) Dump(w io.Writer) {
-	fmt.Fprintf(w, "schema: %s\n", rs.Schema)
-	fmt.Fprintf(w, "table: %s\n", rs.Table)
-	fmt.Fprintf(w, "statement: %s\n", SqlActionNames[rs.Action])
-
+	fmt.Fprintf(w, "schema: %#v | table: %#v | action: %#v\n", rs.Schema, rs.Table, SqlActionNames[rs.Action])
 	if rs.Action == UpdateAction {
 		for _, r := range rs.UpdateRows {
 			r.Dump(w)

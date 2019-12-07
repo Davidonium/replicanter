@@ -106,11 +106,11 @@ func (r *Replicanter) Run() error {
 				return ErrInvalidUpdateRowNumber
 			}
 
-			rows := make([]UpdatedRowPair, l/2)
+			rows := make([]UpdateRowPair, l/2)
 			for i := 0; i < l; i += 2 {
 				br := RowDataFromBinlog(table, cols, rev.Rows[i])
 				ar := RowDataFromBinlog(table, cols, rev.Rows[i+1])
-				pair := UpdatedRowPair{
+				pair := UpdateRowPair{
 					BeforeRow: br,
 					AfterRow:  ar,
 				}

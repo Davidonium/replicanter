@@ -6,6 +6,8 @@ type Column struct {
 	Table   string
 	Name    string
 	Ordinal int
+	Type    string
+	Extra   string
 }
 
 // ColumnNames table --> column ordinal = column name
@@ -22,7 +24,9 @@ func NewSqlColumnNamesRetriever(db *sql.DB) *SqlColumnNamesRetriever {
 func (cnr *SqlColumnNamesRetriever) All(schema string) (ColumnNames, error) {
 	colSql := `select table_name, 
 					  column_name, 
-				      ordinal_position 
+				      ordinal_position,
+       				  column_type,
+       				  extra
 			  	 from information_schema.columns
 			  	where table_schema = ?`
 	colResult, err := cnr.db.Query(colSql, schema)
@@ -37,7 +41,13 @@ func (cnr *SqlColumnNamesRetriever) All(schema string) (ColumnNames, error) {
 
 	for i := 0; colResult.Next(); i++ {
 		var col Column
-		err := colResult.Scan(&col.Table, &col.Name, &col.Ordinal)
+		err := colResult.Scan(
+			&col.Table,
+			&col.Name,
+			&col.Ordinal,
+			&col.Type,
+			&col.Extra,
+		)
 
 		if err != nil {
 			return nil, err
