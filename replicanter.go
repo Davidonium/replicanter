@@ -15,42 +15,28 @@ type ColumnNamesRetriever interface {
 	All(schema string) (ColumnNames, error)
 }
 
-type OnUpdate interface {
-	Handle(st UpdateStatement)
-}
-
 type OnRow interface {
 	Handle(st RowStatement)
 }
-
-type doNothingOnUpdate struct{}
-
-func (*doNothingOnUpdate) Handle(_ UpdateStatement) {}
 
 type doNothingOnRow struct{}
 
 func (*doNothingOnRow) Handle(_ RowStatement) {}
 
 type Replicanter struct {
-	config   Config
-	onUpdate OnUpdate
-	onRow    OnRow
+	config Config
+	onRow  OnRow
 }
 
 func NewReplicanter(cfg Config) *Replicanter {
 	return &Replicanter{
-		config:   cfg,
-		onUpdate: &doNothingOnUpdate{},
-		onRow:    &doNothingOnRow{},
+		config: cfg,
+		onRow:  &doNothingOnRow{},
 	}
 }
 
-func (r *Replicanter) OnUpdate(update OnUpdate) {
-	r.onUpdate = update
-}
-
-func (r *Replicanter) OnRow(def OnRow) {
-	r.onRow = def
+func (r *Replicanter) OnRow(or OnRow) {
+	r.onRow = or
 }
 
 var ErrInvalidNumberOfUpdateRows = errors.New("invalid number of rows for an update, it has to be even (before and after row for each statement)")
@@ -132,14 +118,14 @@ func (r *Replicanter) Run() error {
 				rows = append(rows, pair)
 			}
 
-			us := UpdateStatement{
-				Schema: schema,
-				Table:  table,
-				Action: action,
-				Rows:   rows,
+			rs := RowStatement{
+				Schema:     schema,
+				Table:      table,
+				Action:     action,
+				UpdateRows: rows,
 			}
 
-			r.onUpdate.Handle(us)
+			r.onRow.Handle(rs)
 		} else {
 			rows := make([]RowData, len(rev.Rows))
 			for _, row := range rev.Rows {

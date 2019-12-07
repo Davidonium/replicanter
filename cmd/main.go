@@ -12,12 +12,6 @@ func (*PrintStatementOnRow) Handle(st replicanter.RowStatement) {
 	st.Dump(os.Stdout)
 }
 
-type PrintStatementOnUpdate struct{}
-
-func (*PrintStatementOnUpdate) Handle(st replicanter.UpdateStatement) {
-	st.Dump(os.Stdout)
-}
-
 func main() {
 	cfg := replicanter.Config{
 		ServerID: 1,
@@ -30,7 +24,6 @@ func main() {
 	r := replicanter.NewReplicanter(cfg)
 
 	r.OnRow(&PrintStatementOnRow{})
-	r.OnUpdate(&PrintStatementOnUpdate{})
 
 	err := r.Run()
 
