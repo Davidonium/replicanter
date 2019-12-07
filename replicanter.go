@@ -39,7 +39,7 @@ func (r *Replicanter) OnRow(or OnRow) {
 	r.onRow = or
 }
 
-var ErrInvalidNumberOfUpdateRows = errors.New("invalid number of rows for an update, it has to be even (before and after row for each statement)")
+var ErrInvalidUpdateRowNumber = errors.New("invalid number of rows for an update, it has to be even (before and after row for each statement)")
 
 func (r *Replicanter) Run() error {
 	cfg := replication.BinlogSyncerConfig{
@@ -103,7 +103,7 @@ func (r *Replicanter) Run() error {
 			l := len(rev.Rows)
 
 			if l%2 != 0 {
-				return ErrInvalidNumberOfUpdateRows
+				return ErrInvalidUpdateRowNumber
 			}
 
 			rows := make([]UpdatedRowPair, l/2)
