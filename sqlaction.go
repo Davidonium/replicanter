@@ -21,12 +21,10 @@ var sqlActionNames = map[SqlAction]string{
 }
 
 var eventTypeToAction = map[replication.EventType]SqlAction{
+	replication.WRITE_ROWS_EVENTv1:  InsertAction,
+	replication.UPDATE_ROWS_EVENTv1: UpdateAction,
+	replication.DELETE_ROWS_EVENTv1: DeleteAction,
 	replication.WRITE_ROWS_EVENTv2:  InsertAction,
 	replication.UPDATE_ROWS_EVENTv2: UpdateAction,
 	replication.DELETE_ROWS_EVENTv2: DeleteAction,
-}
-
-func GetSqlActionFromEventType(evt replication.EventType) (SqlAction, bool) {
-	action, ok := eventTypeToAction[evt]
-	return action, ok
 }

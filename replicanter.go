@@ -86,7 +86,7 @@ func (r *Replicanter) Run() error {
 		}
 
 		evt := bev.Header.EventType
-		action, ok := GetSqlActionFromEventType(evt)
+		action, ok := eventTypeToAction[evt]
 
 		if !ok {
 			continue
