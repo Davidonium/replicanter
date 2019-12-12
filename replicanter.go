@@ -106,7 +106,7 @@ func (r *Replicanter) Run() error {
 				return ErrInvalidUpdateRowNumber
 			}
 
-			rows := make([]UpdateRowPair, l/2)
+			rows := make([]UpdateRowPair, 0, l/2)
 			for i := 0; i < l; i += 2 {
 				br := RowDataFromBinlog(table, tables, rev.Rows[i])
 				ar := RowDataFromBinlog(table, tables, rev.Rows[i+1])
@@ -126,7 +126,7 @@ func (r *Replicanter) Run() error {
 
 			r.onRow.Handle(rs)
 		} else {
-			rows := make([]RowData, len(rev.Rows))
+			rows := make([]RowData, 0, len(rev.Rows))
 			for _, row := range rev.Rows {
 				r := RowDataFromBinlog(table, tables, row)
 				rows = append(rows, r)
