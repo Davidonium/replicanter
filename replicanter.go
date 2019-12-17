@@ -99,46 +99,53 @@ func (r *Replicanter) Run() error {
 
 		table := string(rev.Table.Table)
 
+		var rs RowStatement
 		if action == UpdateAction {
-			l := len(rev.Rows)
-
-			if l%2 != 0 {
+			if len(rev.Rows)%2 != 0 {
 				return ErrInvalidUpdateRowNumber
 			}
 
-			rows := make([]UpdateRowPair, 0, l/2)
-			for i := 0; i < l; i += 2 {
-				br := RowDataFromBinlog(table, tables, rev.Rows[i])
-				ar := RowDataFromBinlog(table, tables, rev.Rows[i+1])
-				pair := UpdateRowPair{
-					BeforeRow: br,
-					AfterRow:  ar,
-				}
-
-				rows = append(rows, pair)
-			}
-
-			rs := RowStatement{
-				Table:      tables[table],
-				Action:     action,
-				UpdateRows: rows,
-			}
-
-			r.onRow.Handle(rs)
+			rs = updateRowStatementFromBinlog(rev, table, tables, action)
 		} else {
-			rows := make([]RowData, 0, len(rev.Rows))
-			for _, row := range rev.Rows {
-				r := RowDataFromBinlog(table, tables, row)
-				rows = append(rows, r)
-			}
-
-			s := RowStatement{
-				Table:  tables[table],
-				Action: action,
-				Rows:   rows,
-			}
-
-			r.onRow.Handle(s)
+			rs = rowStatementFromBinlog(rev, table, tables, action)
 		}
+		r.onRow.Handle(rs)
+	}
+}
+
+func rowStatementFromBinlog(rev *replication.RowsEvent, table string, tables Tables, action SqlAction) RowStatement {
+	l := len(rev.Rows)
+	rows := make([]RowData, 0, l)
+	for _, row := range rev.Rows {
+		r := RowDataFromBinlog(table, tables, row)
+		rows = append(rows, r)
+	}
+
+	s := RowStatement{
+		Table:  tables[table],
+		Action: action,
+		Rows:   rows,
+	}
+	return s
+}
+
+func updateRowStatementFromBinlog(rev *replication.RowsEvent, table string, tables Tables, action SqlAction) RowStatement {
+	l := len(rev.Rows)
+	rows := make([]UpdateRowPair, 0, l/2)
+	for i := 0; i < l; i += 2 {
+		br := RowDataFromBinlog(table, tables, rev.Rows[i])
+		ar := RowDataFromBinlog(table, tables, rev.Rows[i+1])
+		pair := UpdateRowPair{
+			BeforeRow: br,
+			AfterRow:  ar,
+		}
+
+		rows = append(rows, pair)
+	}
+
+	return RowStatement{
+		Table:      tables[table],
+		Action:     action,
+		UpdateRows: rows,
 	}
 }

@@ -34,7 +34,7 @@ func (cnr *SqlColumnNamesRetriever) All(ts string) (Tables, error) {
 
 	defer colResult.Close()
 
-	var cols = Tables{}
+	cols := Tables{}
 
 	for i := 0; colResult.Next(); i++ {
 		var tableName, colName, colType, extra string

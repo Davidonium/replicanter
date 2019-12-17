@@ -10,7 +10,7 @@ import (
 type RowData map[string]interface{}
 
 func (rd RowData) Dump(w io.Writer) {
-	fmt.Fprint(w, "data: \n")
+	fmt.Fprint(w, "\ndata: \n")
 	for key, value := range rd {
 		fmt.Fprintf(w, "%s: %#v\n", key, value)
 	}
@@ -20,7 +20,13 @@ func RowDataFromBinlog(table string, tables Tables, row []interface{}) RowData {
 	rd := RowData{}
 
 	for colIndex, value := range row {
-		colName := tables[table].Columns[colIndex].Name
+		c := tables[table].Columns[colIndex]
+		colName := c.Name
+
+		if c.Type == schema.TYPE_ENUM {
+			value = c.EnumValues[value.(int64)-1]
+		}
+
 		rd[colName] = value
 	}
 
