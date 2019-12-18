@@ -10,10 +10,11 @@ import (
 type RowData map[string]interface{}
 
 func (rd RowData) Dump(w io.Writer) {
-	fmt.Fprint(w, "\ndata: \n")
+	fmt.Fprint(w, "start data ================== \n")
 	for key, value := range rd {
 		fmt.Fprintf(w, "%s: %#v\n", key, value)
 	}
+	fmt.Fprint(w, "end data ================== \n")
 }
 
 func RowDataFromBinlog(table string, tables Tables, row []interface{}) RowData {
@@ -39,10 +40,10 @@ type UpdateRowPair struct {
 }
 
 func (urp UpdateRowPair) Dump(w io.Writer) {
-	fmt.Fprintln(w, "before:")
+	fmt.Fprintln(w, "--- before ---")
 	urp.BeforeRow.Dump(w)
 
-	fmt.Fprintln(w, "after:")
+	fmt.Fprintln(w, "--- after ---")
 	urp.AfterRow.Dump(w)
 }
 
