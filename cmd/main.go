@@ -11,7 +11,7 @@ type PrintStatementOnRow struct{}
 
 func (*PrintStatementOnRow) Handle(st replicanter.RowStatement) {
 	st.Dump(os.Stdout)
-	fmt.Println("")
+	fmt.Print("\n")
 }
 
 func main() {
