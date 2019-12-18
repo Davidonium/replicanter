@@ -4,7 +4,7 @@
 build:
 	go build -o build/replicanter cmd/main.go
 
-.PHONY: get
+.PHONY: run
 run: build
 	./build/replicanter
 
