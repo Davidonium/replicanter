@@ -10,11 +10,11 @@ import (
 type RowData map[string]interface{}
 
 func (rd RowData) Dump(w io.Writer) {
-	fmt.Fprint(w, "start data ================== \n")
+	fmt.Fprint(w, "start data ==================\n")
 	for key, value := range rd {
 		fmt.Fprintf(w, "%s: %#v\n", key, value)
 	}
-	fmt.Fprint(w, "end data ================== \n")
+	fmt.Fprint(w, "end data ==================\n")
 }
 
 func RowDataFromBinlog(table string, tables Tables, row []interface{}) RowData {
